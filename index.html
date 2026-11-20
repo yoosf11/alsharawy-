@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al.sharawy POS</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 p-4">
+        <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-cash-register text-4xl text-white"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white">Al.sharawy</h1>
+                <p class="text-slate-400 text-sm mt-2">نظام إدارة المبيعات المتكامل</p>
+            </div>
+
+            <form id="login-form" class="space-y-6" onsubmit="handleLogin(event)">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">اسم المستخدم</label>
+                    <input type="text" id="username" required placeholder="أدخل اسم المستخدم"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">كلمة المرور</label>
+                    <input type="password" id="password" required placeholder="••••••••"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-blue-600/30">
+                    تسجيل الدخول
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- الواجهة الرئيسية (تظهر بعد الدخول) -->
+    <div id="app-container" class="flex-1 flex flex-col md:flex-row hidden">
+
+        <!-- القائمة الجانبية -->
+        <aside class="w-full md:w-64 bg-slate-900 border-l border-slate-800 flex flex-col">
+            <div class="p-6 border-b border-slate-800">
+                <h2 class="text-xl font-bold text-white truncate" id="system-title">Al.sharawy</h2>
+                <span class="text-xs text-emerald-400 font-medium">متصل بالنظام</span>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <button onclick="switchView('sales')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold">
+                    <i class="fa-solid fa-cart-shopping w-5"></i> فاتورة مبيعات
+                </button>
+
+                <button onclick="switchView('sales-return')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-rotate-left w-5"></i> مرتجع مبيعات
+                </button>
+
+                <button onclick="switchView('purchases')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-truck-ramp-box w-5"></i> فاتورة مشتريات
+                </button>
+
+                <button onclick="switchView('purchases-return')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-arrow-right-arrow-left w-5"></i> مرتجع مشتريات
+                </button>
+
+                <button onclick="switchView('expenses')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-wallet w-5"></i> المصروفات
+                </button>
+
+                <button onclick="switchView('inventory')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-boxes-stacked w-5"></i> المخزن والأصناف
+                </button>
+
+                <button onclick="switchView('contacts')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-users w-5"></i> العملاء والموردين
+                </button>
+
+                <button onclick="switchView('employees')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-user-shield w-5"></i> إدارة المستخدمين
+                </button>
+
+                <button onclick="switchView('reports')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-chart-pie w-5"></i> التقارير العامة
+                </button>
+            </nav>
+        </aside>
+
+        <!-- منطقة العرض الرئيسية -->
+        <main id="main-content" class="flex-1 p-8 overflow-y-auto bg-slate-950">
+            <h1 class="text-2xl font-bold text-white mb-6">مرحباً بك في نظام المبيعات</h1>
+            <p class="text-slate-400">اختر قسماً من القائمة الجانبية للبدء.</p>
+        </main>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/pos.js"></script>
+    <script src="js/print.js"></script>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value;
+
+            if (!user || !pass) {
+                alert('من فضلك أدخل اسم المستخدم وكلمة المرور');
+                return;
+            }
+
+            const loggedInUser = await login(user, pass);
+
+            if (!loggedInUser) {
+                return;
+            }
+
+            const profile = await getUserProfile(loggedInUser.id);
+
+            if (!profile) {
+                alert('تم تسجيل الدخول، لكن تعذر جلب بيانات المستخدم');
+                return;
+            }
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+
+            const title = document.getElementById('system-title');
+
+            if (title && profile.full_name) {
+                title.textContent = profile.full_name;
+            }
+
+            switchView('sales');
+        }
+    </script>
+</body>
+</html>
